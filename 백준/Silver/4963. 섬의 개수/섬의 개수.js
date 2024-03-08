@@ -1,9 +1,9 @@
 const fs = require("fs");
 const filePath = process.platform === "linux" ? "/dev/stdin" : "./input.txt";
 const input = fs.readFileSync(filePath).toString().trim().split("\n");
-let visited;
-let graph;
+
 let result = [];
+let graph;
 let ds = [
   [-1, 0],
   [1, 0],
@@ -19,7 +19,7 @@ const solution = (graph) => {
   let islandCount = 0;
   for (let i = 0; i < graph.length; i++) {
     for (let j = 0; j < graph[0].length; j++) {
-      if (graph[i][j] === 1 && visited[i][j] === false) {
+      if (graph[i][j] === 1) {
         bfs(i, j);
         islandCount++;
       }
@@ -36,15 +36,14 @@ const bfs = (startX, startY) => {
     let [x, y] = queue.shift();
 
     // 2.방문 처리
-    if (visited[x][y] === false) {
-      visited[x][y] = true;
+    if (graph[x][y] == 1) {
+      graph[x][y] = 0;
 
       // 3. 해당 노드의 상하좌우가 1이고 out of range가 아니면 큐에 추가
       for (let i = 0; i < 8; i++) {
         let dx = x + ds[i][0];
         let dy = y + ds[i][1];
         if (dx < 0 || dx >= graph.length || dy < 0 || dy >= graph[0].length) continue; // out of range 검사
-        if (visited[dx][dy] === true) continue;
         if (graph[dx][dy] === 1) queue.push([dx, dy]);
       }
     }
@@ -59,7 +58,6 @@ while (input[0] !== "0 0") {
     let w = [...input.shift().split(" ").map(Number)]; // 행
     graph.push(w); // 테스트케이스에 행 push 반복
   }
-  visited = Array.from(Array(h), () => new Array(w).fill(false));
   result.push(solution(graph));
 }
 console.log(result.join("\n"));
