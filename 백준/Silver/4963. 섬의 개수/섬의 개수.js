@@ -1,61 +1,65 @@
 const fs = require("fs");
 const filePath = process.platform === "linux" ? "/dev/stdin" : "./input.txt";
-let input = fs
-    .readFileSync(filePath)
-    .toString()
-    .trim()
-    .split("\n")
-    .map((item) => item.split(" ").map((value) => +value));
-
-let map;
+const input = fs.readFileSync(filePath).toString().trim().split("\n");
 let visited;
-let x = [0, 1, 1, 1, 0, -1, -1, -1];
-let y = [1, 1, 0, -1, -1, -1, 0, 1];
+let graph;
 let result = [];
+let ds = [
+  [-1, 0],
+  [1, 0],
+  [0, -1],
+  [0, 1],
+  [-1, -1],
+  [1, 1],
+  [-1, 1],
+  [1, -1],
+];
 
-const BFS = (start, w, h) => {
-    let queue = [start];
-    let count = 0;
-    while (queue.length) {
-        let [curX, curY] = queue.shift();
-        if (!visited[curY][curX]) {
-            if (map[curY][curX]) count++; // 섬이 있으면 count 1증가
-            visited[curY][curX] = true; // 방문 체크
-            for (let i = 0; i < x.length; i++) { // 지도 범위 밖으로 나가는지 체크
-                if (
-                    curX + x[i] < 0 ||
-                    curY + y[i] < 0 ||
-                    curX + x[i] >= w ||
-                    curY + y[i] >= h
-                ) {
-                    continue;
-                }
-                if (visited[curY + y[i]][curX + x[i]]) continue;  // 주변을 방문한적이 있는지 체크
-                if (map[curY + y[i]][curX + x[i]]) { // 주변에 섬이 있는곳을 queue에 넣어준다
-                    queue.push([curX + x[i], curY + y[i]]);
-                }
-            }
-        }
+const solution = (graph) => {
+  let islandCount = 0;
+  for (let i = 0; i < graph.length; i++) {
+    for (let j = 0; j < graph[0].length; j++) {
+      if (graph[i][j] === 1 && visited[i][j] === false) {
+        bfs(i, j);
+        islandCount++;
+      }
     }
-    return count;
+  }
+  return islandCount;
 };
 
-for (let i = 0; i < input.length - 1; i++) {
-    const [w, h] = input[i];
-    let answer = 0;
-    map = input.slice(i + 1, i + h + 1);
-    i = i + h;
-    visited = [...Array(h)]
-        .map(() => false)
-        .map(() => [...Array(w)].map(() => false));
-    for (let i = 0; i < h; i++) {
-        for (let j = 0; j < w; j++) {
-            if (visited[i][j]) continue;
-            let count = BFS([j, i], w, h);
-            if (count) answer++; // 섬이 카운트가 됬으면 answer 1증가
-        }
-    }
-    result.push(answer); 
-}
+const bfs = (startX, startY) => {
+  let queue = [[startX, startY]]; // 큐에 노드 넣기
 
+  while (queue.length !== 0) {
+    // 1.큐에서 노드 꺼내서
+    let [x, y] = queue.shift();
+
+    // 2.방문 처리
+    if (visited[x][y] === false) {
+      visited[x][y] = true;
+
+      // 3. 해당 노드의 상하좌우가 1이고 out of range가 아니면 큐에 추가
+      for (let i = 0; i < 8; i++) {
+        let dx = x + ds[i][0];
+        let dy = y + ds[i][1];
+        if (dx < 0 || dx >= graph.length || dy < 0 || dy >= graph[0].length) continue; // out of range 검사
+        if (visited[dx][dy] === true) continue;
+        if (graph[dx][dy] === 1) queue.push([dx, dy]);
+      }
+    }
+  }
+};
+
+// make graph & solution() start
+while (input[0] !== "0 0") {
+  graph = []; // graph에 각 테스트케이스 별로 2차원 배열 저장
+  let [w, h] = input.shift().split(" ").map(Number);
+  for (let i = 0; i < h; i++) {
+    let w = [...input.shift().split(" ").map(Number)]; // 행
+    graph.push(w); // 테스트케이스에 행 push 반복
+  }
+  visited = Array.from(Array(h), () => new Array(w).fill(false));
+  result.push(solution(graph));
+}
 console.log(result.join("\n"));
